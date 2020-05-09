@@ -135,6 +135,13 @@
        '(a) ,,, 'a
        '((a)) ,,, 'a
        '(a + b) ,,, '(+ a b)
-       '(- a + b / #(rand) == ! c) ,,, '(clojure.core/= (+ (- a) (/ b (rand))) (clojure.core/not c))
+       '(- a + b / #(rand) == ! c) ,,, '(clojure.core/=
+                                         (+ (- a) (/ b (rand)))
+                                         (clojure.core/not c))
        '(#(f - 1 2) != #(g + 1 2)) ,,, '(clojure.core/not= (f - 1 2) (g + 1 2))
+       '(a * #(rand 5) + b <= - c || d ** (e + x) != (f / 2) % g) ,,, '(clojure.core/or
+                                                                        (<= (+ (* a (rand 5)) b) (- c))
+                                                                        (clojure.core/not=
+                                                                         (java.lang.Math/pow d (+ e x))
+                                                                         (clojure.core/mod (/ f 2) g)))
        ))

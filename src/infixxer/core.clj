@@ -57,10 +57,10 @@
         indices (keep-indexed op-op-other? triplets)]
     (if (empty? indices)
       {:expr expr :changed false}
-      ; loop in reverse order because size changes at each iteration
       (if (and (= 1 (count indices))
                (= 2 (count expr)))
         {:expr expr :changed false}
+        ; loop in reverse order because size changes at each iteration
         (loop [expr (vec expr)
                indices (reverse indices)]
           (if (empty? indices)
