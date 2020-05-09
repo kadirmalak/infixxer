@@ -49,6 +49,7 @@
         indices (keep-indexed op-op-other? triplets)]
     (if (empty? indices)
       {:expr expr :changed false}
+      ; loop in reverse order because size changes at each iteration
       (loop [expr (vec expr)
              indices (reverse indices)]
         (if (empty? indices)
@@ -81,9 +82,7 @@
 
 (defn add-parentheses [expr]
   (if (= 'fn* (first expr))
-    ; just take the body of the anonymous function
-    ; (fn* [] (...)) => (...)
-    {:expr (nth expr 2) :changed false}
+    {:expr expr :changed false}
     (let [triplets (map vec (partition 3 2 expr))
           n (count triplets)]
       (if (< n 2)
@@ -93,9 +92,9 @@
               parts (map-indexed
                      (fn [i triplet]
                        (cond
-                         (< i idx) (subvec triplet 0 2)   ; (a b _)
-                         (= i idx) [(apply list triplet)] ; surround with (...)
-                         (> i idx) (subvec triplet 1 3))) ; (_ b c)
+                         (< i idx) (subvec triplet 0 2)   ; [a b]
+                         (= i idx) [(apply list triplet)] ; [(a b c)]
+                         (> i idx) (subvec triplet 1 3))) ; [b c]
                      triplets)]
           {:expr (apply concat parts) :changed true})))))
 
@@ -108,16 +107,18 @@
 
 (defn process [expr]
   (if (seq? expr)
-    (->> expr
-         (map process)
-         (add-all-unary-parentheses)
-         (add-all-parentheses))
+    (if (= 'fn* (first expr))
+      expr
+      (->> expr
+           (map process)
+           (add-all-unary-parentheses)
+           (add-all-parentheses)))
     expr))
 
 (defn reorder [expr]
   (let [[x & _] expr]
     (if (= 'fn* x)
-      (nth expr 2) ; just the body
+      (nth expr 2) ; just take the body
       (condp = (count expr)
         1 (let [[x] expr]
             (if (seq? x) (reorder x) x))
@@ -134,7 +135,7 @@
                 x (if (seq? x) (reorder x) x)
                 y (if (seq? y) (reorder y) y)]
             (list op x y))
-        (throw (new Exception (str "wrong number of elements: " expr)))))))
+        (throw (new Exception (str "wrong number of elements: " (count expr))))))))
 
 (defn convert [expr]
   (-> expr
