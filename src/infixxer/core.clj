@@ -4,21 +4,29 @@
   {"u!" {:precedence 13 :alias `not}
    "u+" {:precedence 13}
    "u-" {:precedence 13}
+
    "/"  {:precedence 12}
    "*"  {:precedence 12}
    "**" {:precedence 12 :alias `Math/pow}
    "%"  {:precedence 12 :alias `mod}
+
    "+"  {:precedence 11}
    "-"  {:precedence 11}
+
    "<"  {:precedence 9}
    "<=" {:precedence 9}
    ">"  {:precedence 9}
    ">=" {:precedence 9}
+
    "==" {:precedence 8 :alias `=}
    "!=" {:precedence 8 :alias `not=}
+
    "&"  {:precedence 7 :alias `bit-and}
+
    "|"  {:precedence 5 :alias `bit-or}
+
    "&&" {:precedence 4 :alias `and}
+
    "||" {:precedence 3 :alias `or}
    })
 
@@ -50,14 +58,17 @@
     (if (empty? indices)
       {:expr expr :changed false}
       ; loop in reverse order because size changes at each iteration
-      (loop [expr (vec expr)
-             indices (reverse indices)]
-        (if (empty? indices)
-          {:expr (apply list expr) :changed true}
-          (let [i (first indices)
-                indices (rest indices)
-                expr (group-with-next-at expr i)]
-            (recur expr indices)))))))
+      (if (and (= 1 (count indices))
+               (= 2 (count expr)))
+        {:expr expr :changed false}
+        (loop [expr (vec expr)
+               indices (reverse indices)]
+          (if (empty? indices)
+            {:expr (apply list expr) :changed true}
+            (let [i (first indices)
+                  indices (rest indices)
+                  expr (group-with-next-at expr i)]
+              (recur expr indices))))))))
 
 (defn add-all-unary-parentheses [expr]
   (loop [expr expr]
@@ -80,67 +91,65 @@
              #(= max-precedence (:precedence %))
              table))))
 
-(defn add-parentheses [expr]
-  (if (= 'fn* (first expr))
-    {:expr expr :changed false}
-    (let [triplets (map vec (partition 3 2 expr))
-          n (count triplets)]
-      (if (< n 2)
-        {:expr expr :changed false}
-        (let [candidates (map second triplets)
-              idx (:index (choose-op candidates))
-              parts (map-indexed
-                     (fn [i triplet]
-                       (cond
-                         (< i idx) (subvec triplet 0 2)   ; [a b]
-                         (= i idx) [(apply list triplet)] ; [(a b c)]
-                         (> i idx) (subvec triplet 1 3))) ; [b c]
-                     triplets)]
-          {:expr (apply concat parts) :changed true})))))
+(defn add-binary-parentheses [expr]
+  (let [triplets (map vec (partition 3 2 expr))
+        n (count triplets)]
+    (if (< n 2)
+      {:expr expr :changed false}
+      (let [candidates (map second triplets)
+            idx (:index (choose-op candidates))
+            parts (map-indexed
+                   (fn [i triplet]
+                     (cond
+                       (< i idx) (subvec triplet 0 2)   ; [a b]
+                       (= i idx) [(apply list triplet)] ; [(a b c)]
+                       (> i idx) (subvec triplet 1 3))) ; [b c]
+                   triplets)]
+        {:expr (apply concat parts) :changed true}))))
 
-(defn add-all-parentheses [expr]
+(defn add-all-binary-parentheses [expr]
   (loop [expr expr]
-    (let [{:keys [expr changed]} (add-parentheses expr)]
+    (let [{:keys [expr changed]} (add-binary-parentheses expr)]
       (if changed
         (recur expr)
         expr))))
 
-(defn process [expr]
+(defn add-all-parentheses [expr]
   (if (seq? expr)
     (if (= 'fn* (first expr))
       expr
       (->> expr
-           (map process)
+           (map add-all-parentheses)
            (add-all-unary-parentheses)
-           (add-all-parentheses)))
+           (add-all-binary-parentheses)))
     expr))
 
-(defn reorder [expr]
+(defn reorder-and-replace [expr]
   (let [[x & _] expr]
     (if (= 'fn* x)
       (nth expr 2) ; just take the body
       (condp = (count expr)
         1 (let [[x] expr]
-            (if (seq? x) (reorder x) x))
+            (if (seq? x) (reorder-and-replace x) x))
         2 (let [[op x] expr
                 op (-> ops
                        (get (str "u" op) {})
                        (:alias op))
-                x (if (seq? x) (reorder x) x)]
+                x (if (seq? x) (reorder-and-replace x) x)]
             (list op x))
         3 (let [[x op y] expr
                 op (-> ops
                        (get (str op) {})
                        (:alias op))
-                x (if (seq? x) (reorder x) x)
-                y (if (seq? y) (reorder y) y)]
+                x (if (seq? x) (reorder-and-replace x) x)
+                y (if (seq? y) (reorder-and-replace y) y)]
             (list op x y))
         (throw (new Exception (str "wrong number of elements: " (count expr))))))))
 
 (defn convert [expr]
   (-> expr
-      (process)
-      (reorder)))
+      (add-all-parentheses)
+      (reorder-and-replace)))
 
 (defmacro $= [& expr]
   (convert expr))
