@@ -2,33 +2,19 @@
 
 Infix to prefix conversion library for Clojure
 
-Supported operators:
+## Installing
 
-Note: "u" before unary operator names is just to prevent naming collision in the map. 
+- Leiningen/Boot
 
 ```
-["u+" {:precedence 13}]
-["u-" {:precedence 13}]
-["u!" {:precedence 13, :alias clojure.core/not}]
-["**" {:precedence 12, :alias java.lang.Math/pow}]
-["*" {:precedence 12}]
-["%" {:precedence 12, :alias clojure.core/mod}]
-["/" {:precedence 12}]
-["-" {:precedence 11}]
-["+" {:precedence 11}]
-["<=" {:precedence 9}]
-[">=" {:precedence 9}]
-["<" {:precedence 9}]
-[">" {:precedence 9}]
-["!=" {:precedence 8, :alias clojure.core/not=}]
-["==" {:precedence 8, :alias clojure.core/=}]
-["&" {:precedence 7, :alias clojure.core/bit-and}]
-["|" {:precedence 5, :alias clojure.core/bit-or}]
-["&&" {:precedence 4, :alias clojure.core/and}]
-["||" {:precedence 3, :alias clojure.core/or}]
+[infixxer "0.1.0"]
 ```
 
 ## Usage
+
+```
+(require '[infixxer.core :refer [$= convert]])
+```
 
 ### Basic Usage
 ```
@@ -107,6 +93,32 @@ Use (convert '(...)) to see the expansion
 (convert '(- a + b / #(rand) == ! c))
 => (clojure.core/= (+ (- a) (/ b (rand))) (clojure.core/not c))
 
+```
+
+## Supported operators
+
+Note: "u" before unary operator names is just to prevent naming collision in the map. 
+
+```
+["u+" {:precedence 13}]
+["u-" {:precedence 13}]
+["u!" {:precedence 13, :alias clojure.core/not}]
+["**" {:precedence 12, :alias java.lang.Math/pow}]
+["*" {:precedence 12}]
+["%" {:precedence 12, :alias clojure.core/mod}]
+["/" {:precedence 12}]
+["-" {:precedence 11}]
+["+" {:precedence 11}]
+["<=" {:precedence 9}]
+[">=" {:precedence 9}]
+["<" {:precedence 9}]
+[">" {:precedence 9}]
+["!=" {:precedence 8, :alias clojure.core/not=}]
+["==" {:precedence 8, :alias clojure.core/=}]
+["&" {:precedence 7, :alias clojure.core/bit-and}]
+["|" {:precedence 5, :alias clojure.core/bit-or}]
+["&&" {:precedence 4, :alias clojure.core/and}]
+["||" {:precedence 3, :alias clojure.core/or}]
 ```
 
 ## License
