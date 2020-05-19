@@ -1,3 +1,5 @@
+[![Clojars Project](https://img.shields.io/clojars/v/infixxer.svg)](https://clojars.org/infixxer)
+
 # infixxer
 
 Infix to prefix conversion library for Clojure
