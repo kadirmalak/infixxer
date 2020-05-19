@@ -1,4 +1,5 @@
-(ns infixxer.core)
+(ns ^{:author "Kadir Malak"}
+  infixxer.core)
 
 (def ops
   {"u!" {:precedence 13 :alias `not}
