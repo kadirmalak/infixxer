@@ -1,16 +1,10 @@
-[![Clojars Project](https://img.shields.io/clojars/v/infixxer.svg)](https://clojars.org/infixxer)
-
 # infixxer
 
 Infix to prefix conversion library for Clojure
 
 ## Installing
 
-- Leiningen/Boot
-
-```
-[infixxer "0.1.1"]
-```
+[![Clojars Project](https://img.shields.io/clojars/v/infixxer.svg)](https://clojars.org/infixxer)
 
 ## Usage
 
